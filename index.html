@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>减肥计划表</title>
+<style>
+  :root {
+    --pink: #f0a5b5;
+    --rose: #e88193;
+    --coral: #f7b5a5;
+    --mint: #a8d8c8;
+    --lavender: #c3b5e5;
+    --peach: #fdd9c8;
+    --bg: #fef9f7;
+    --card: #ffffff;
+    --text: #5c4b51;
+    --text-light: #9b8a8f;
+    --accent: #e88193;
+    --success: #7ecba1;
+    --danger: #f0a5b5;
+    --gold: #e8b87a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 16px 12px 32px;
+    background-image:
+      radial-gradient(ellipse at 20% 10%, rgba(240,165,181,0.2) 0%, transparent 55%),
+      radial-gradient(ellipse at 85% 20%, rgba(195,181,229,0.18) 0%, transparent 55%),
+      radial-gradient(ellipse at 60% 90%, rgba(168,216,200,0.15) 0%, transparent 55%);
+  }
+
+  .container { max-width: 640px; margin: 0 auto; }
+
+  /* Decorative dots */
+  .deco-dots {
+    position: fixed;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    padding: 20px 16px 14px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .header h1 {
+    font-size: 1.55em;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    background: linear-gradient(135deg, #e88193, #d4859e, #c3a0c8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .header .subtitle {
+    margin-top: 6px;
+    font-size: 0.85em;
+    color: #b8a0a8;
+    letter-spacing: 0.03em;
+  }
+
+  .badge-row {
+    margin-top: 14px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.8em;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+
+  .badge-start {
+    background: #fef0f3;
+    color: #d4859e;
+    border: 1px solid #fad5df;
+  }
+
+  .badge-target {
+    background: #eef9f3;
+    color: #7ecba1;
+    border: 1px solid #c8edda;
+  }
+
+  .badge-total {
+    background: #fef7ef;
+    color: #e8b87a;
+    border: 1px solid #fbe8d0;
+  }
+
+  .setting-badge {
+    cursor: pointer;
+  }
+
+  .setting-badge input {
+    width: 44px;
+    text-align: center;
+    border: none;
+    border-bottom: 1.5px dashed #d0c0c8;
+    background: transparent;
+    font-size: inherit;
+    font-weight: 700;
+    font-family: inherit;
+    color: inherit;
+    outline: none;
+    padding: 0 2px;
+    transition: border-color 0.2s;
+    border-radius: 0;
+  }
+
+  .setting-badge input:focus {
+    border-bottom-color: #e88193;
+  }
+
+  /* Progress */
+  .progress-section {
+    margin: 4px 0 14px;
+    padding: 0 4px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78em;
+    color: #c0a8b0;
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+
+  .progress-bar {
+    height: 8px;
+    background: #f5eaee;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.04);
+  }
+
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #f0c5cf, #e88193, #d4a8c8);
+    border-radius: 10px;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 8px rgba(232,129,147,0.3);
+  }
+
+  /* Cards (unused, kept for reference) */
+  .card {
+    background: var(--card);
+    border-radius: 18px;
+    padding: 16px;
+    margin-bottom: 14px;
+    border: 1px solid #f5eaee;
+    box-shadow: 0 4px 20px rgba(180,150,160,0.08), 0 1px 3px rgba(0,0,0,0.03);
+    position: relative;
+    z-index: 1;
+  }
+
+  .card h3 {
+    font-size: 1em;
+    margin-bottom: 12px;
+    color: #5c4b51;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+  }
+
+  .card h3::before {
+    content: '';
+    display: inline-block;
+    width: 4px;
+    height: 16px;
+    background: linear-gradient(180deg, #f0a5b5, #c3b5e5);
+    border-radius: 2px;
+  }
+
+  .card ol {
+    list-style: none;
+    counter-reset: rule;
+  }
+
+  .card li {
+    counter-increment: rule;
+    padding: 5px 0 5px 30px;
+    position: relative;
+    font-size: 0.85em;
+    line-height: 1.7;
+    color: #8b7a80;
+  }
+
+  .card li::before {
+    content: counter(rule);
+    position: absolute;
+    left: 0;
+    top: 5px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #fef0f3;
+    color: #e88193;
+    font-size: 0.7em;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Table */
+  .table-card {
+    background: var(--card);
+    border-radius: 18px;
+    overflow: hidden;
+    border: 1px solid #f5eaee;
+    box-shadow: 0 4px 20px rgba(180,150,160,0.08), 0 1px 3px rgba(0,0,0,0.03);
+    margin-bottom: 14px;
+    position: relative;
+    z-index: 1;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78em;
+  }
+
+  thead th {
+    background: #fef7f8;
+    color: #d4859e;
+    font-weight: 700;
+    padding: 12px 8px;
+    text-align: center;
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    border-bottom: 1px solid #fce8ed;
+    font-size: 0.92em;
+  }
+
+  tbody td {
+    padding: 10px 8px;
+    text-align: center;
+    border-bottom: 1px solid #fdf4f6;
+    transition: background 0.2s;
+  }
+
+  tbody tr {
+    transition: background 0.2s, transform 0.2s;
+  }
+
+  tbody tr:hover {
+    background: #fefafb;
+  }
+
+  tbody tr:active {
+    background: #fef5f7;
+  }
+
+  .week-num {
+    font-weight: 700;
+    color: #5c4b51;
+  }
+
+  .date-range {
+    color: #b8a0a8;
+    font-size: 0.9em;
+  }
+
+  .weight-start { color: #d4859e; font-weight: 600; }
+  .weight-target { color: #7ecba1; font-weight: 700; }
+  .weight-loss { color: #e8b87a; font-weight: 600; }
+
+  /* Current week */
+  tbody tr:first-child td {
+    background: #fef9fa;
+  }
+
+  tbody tr:first-child td:first-child {
+    position: relative;
+  }
+
+  tbody tr:first-child td:first-child::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 6px;
+    bottom: 6px;
+    width: 3px;
+    background: linear-gradient(180deg, #f0a5b5, #c3b5e5);
+    border-radius: 0 2px 2px 0;
+  }
+
+  /* Result toggle buttons */
+  .result-btn {
+    display: inline-block;
+    padding: 5px 14px;
+    border-radius: 14px;
+    font-size: 0.85em;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.15s, box-shadow 0.15s;
+    border: 1px solid transparent;
+    min-width: 50px;
+    letter-spacing: 0.03em;
+  }
+
+  .result-btn:active {
+    transform: scale(0.93);
+  }
+
+  .result-empty {
+    background: #faf5f7;
+    color: #c0a8b0;
+    border: 1px dashed #ead5dc;
+  }
+
+  .result-success {
+    background: #eef9f3;
+    color: #7ecba1;
+    border-color: #c8edda;
+    box-shadow: 0 0 12px rgba(126,203,161,0.12);
+  }
+
+  .result-fail {
+    background: #fef3f5;
+    color: #d898a8;
+    border-color: #fad5df;
+  }
+
+  .result-hint {
+    display: block;
+    font-size: 0.65em;
+    color: #d0c0c8;
+    margin-top: 2px;
+  }
+
+  /* Cheat meal button */
+  .cheat-btn {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 14px;
+    font-size: 0.82em;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.15s, box-shadow 0.15s;
+    border: 1px dashed #ead5dc;
+    color: #c0a8b0;
+    min-width: 40px;
+    background: #fdfafb;
+    letter-spacing: 0.02em;
+  }
+
+  .cheat-btn:active {
+    transform: scale(0.93);
+  }
+
+  .cheat-set {
+    color: #e8b87a;
+    border-color: #fbe4cc;
+    background: #fef9f3;
+    box-shadow: 0 0 12px rgba(232,184,122,0.1);
+    animation: sparkle 2.2s ease-in-out infinite;
+  }
+
+  .cheat-locked {
+    color: #d8c8d0;
+    cursor: not-allowed;
+    border-color: #f5e8ec;
+    background: transparent;
+  }
+
+  @keyframes sparkle {
+    0%, 100% { box-shadow: 0 0 6px rgba(232,184,122,0.06); }
+    50% { box-shadow: 0 0 18px rgba(232,184,122,0.22); }
+  }
+
+  /* Popup */
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(120,90,100,0.2);
+    backdrop-filter: blur(2px);
+    z-index: 99;
+  }
+
+  .overlay.show { display: block; }
+
+  .quick-popup {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border-radius: 22px 22px 0 0;
+    padding: 20px 22px 28px;
+    z-index: 100;
+    box-shadow: 0 -8px 40px rgba(180,130,150,0.15);
+    animation: slideUp 0.3s ease-out;
+    border: 1px solid #f5eaee;
+    border-bottom: none;
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+
+  .quick-popup.show { display: block; }
+
+  .quick-popup h4 {
+    font-size: 0.95em;
+    margin-bottom: 14px;
+    color: #5c4b51;
+    font-weight: 600;
+  }
+
+  .quick-popup input {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 14px;
+    border: 1.5px solid #ead5dc;
+    background: #fefafb;
+    color: #5c4b51;
+    font-size: 0.95em;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .quick-popup input:focus {
+    border-color: #f0a5b5;
+    box-shadow: 0 0 0 3px rgba(240,165,181,0.12);
+  }
+
+  .quick-popup input::placeholder {
+    color: #d0c0c8;
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+  }
+
+  .btn-row button {
+    flex: 1;
+    padding: 11px;
+    border-radius: 14px;
+    font-size: 0.88em;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    font-family: inherit;
+    transition: transform 0.1s, opacity 0.2s;
+    letter-spacing: 0.03em;
+  }
+
+  .btn-row button:active {
+    transform: scale(0.96);
+  }
+
+  .btn-save {
+    background: linear-gradient(135deg, #f0a5b5, #e88193);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(232,129,147,0.25);
+  }
+
+  .btn-clear {
+    background: #fef3f5;
+    color: #d898a8;
+  }
+
+  .btn-cancel {
+    background: #f8f4f6;
+    color: #b8a0a8;
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    color: #b8a0a8;
+    font-size: 0.8em;
+    padding: 12px 16px;
+    background: var(--card);
+    border-radius: 18px;
+    border: 1px solid #f5eaee;
+    box-shadow: 0 4px 20px rgba(180,150,160,0.08), 0 1px 3px rgba(0,0,0,0.03);
+    position: relative;
+    z-index: 1;
+  }
+
+  .footer strong { color: #5c4b51; }
+  .footer .highlight { color: #e88193; font-weight: 700; }
+
+  /* Reset */
+  .reset-section {
+    text-align: center;
+    margin-top: 12px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .btn-reset {
+    padding: 8px 20px;
+    border-radius: 20px;
+    background: transparent;
+    border: 1px solid #f0dfe5;
+    color: #c0a8b0;
+    font-size: 0.75em;
+    cursor: pointer;
+    font-family: inherit;
+    transition: color 0.2s, border-color 0.2s, background 0.2s;
+    letter-spacing: 0.02em;
+  }
+
+  .btn-reset:hover {
+    background: #fef5f7;
+    border-color: #f0c5cf;
+    color: #d4859e;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #fff;
+    color: #5c4b51;
+    padding: 10px 24px;
+    border-radius: 20px;
+    font-size: 0.82em;
+    font-weight: 600;
+    z-index: 200;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.35s;
+    box-shadow: 0 8px 28px rgba(180,130,150,0.2);
+    letter-spacing: 0.03em;
+  }
+
+  .toast.show {
+    opacity: 1;
+  }
+
+  /* Mobile */
+  @media (max-width: 480px) {
+    body {
+      padding: 12px 6px 28px;
+    }
+
+    .header {
+      padding: 20px 12px 12px;
+    }
+
+    .header h1 {
+      font-size: 1.35em;
+    }
+
+    .header .subtitle {
+      font-size: 0.72em;
+      margin-top: 4px;
+    }
+
+    .badge-row {
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .badge {
+      font-size: 0.7em;
+      padding: 4px 10px;
+    }
+
+    .progress-section {
+      margin: 4px 4px 14px;
+    }
+
+    .progress-label {
+      font-size: 0.7em;
+    }
+
+    table {
+      font-size: 0.66em;
+    }
+
+    thead th {
+      padding: 7px 4px;
+      font-size: 0.85em;
+    }
+
+    tbody td {
+      padding: 7px 4px;
+    }
+
+    .result-btn {
+      padding: 3px 8px;
+      font-size: 0.75em;
+      min-width: 38px;
+    }
+
+    .result-hint {
+      font-size: 0.55em;
+    }
+
+    .cheat-btn {
+      padding: 3px 8px;
+      font-size: 0.68em;
+      min-width: 28px;
+    }
+
+    .table-card {
+      border-radius: 14px;
+    }
+
+    .footer {
+      border-radius: 14px;
+      font-size: 0.75em;
+      padding: 12px 14px;
+    }
+
+    .btn-reset {
+      font-size: 0.7em;
+      padding: 6px 16px;
+    }
+
+    .setting-badge input {
+      width: 36px;
+    }
+  }
+
+  /* Even smaller phones */
+  @media (max-width: 360px) {
+    body {
+      padding: 8px 2px 20px;
+    }
+
+    table {
+      font-size: 0.6em;
+    }
+
+    thead th {
+      padding: 6px 2px;
+    }
+
+    tbody td {
+      padding: 6px 2px;
+    }
+
+    .result-btn {
+      padding: 2px 6px;
+      font-size: 0.7em;
+      min-width: 32px;
+    }
+
+    .cheat-btn {
+      padding: 2px 6px;
+      font-size: 0.62em;
+      min-width: 22px;
+    }
+
+    .header h1 {
+      font-size: 1.2em;
+    }
+
+    .badge {
+      font-size: 0.65em;
+      padding: 3px 8px;
+    }
+
+    .header {
+      padding: 14px 8px 8px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <div class="header">
+    <h1>减肥计划表</h1>
+    <p class="subtitle">初始体重 150斤 · 每周减 4斤 · 达标享放纵餐</p>
+    <div class="badge-row">
+      <span class="badge badge-start setting-badge" onclick="editSetting('start')">起始 <input id="startWeight" value="150" onchange="rebuildPlan()" onfocus="this.select()"> 斤</span>
+      <span class="badge badge-target setting-badge" onclick="editSetting('target')">目标 <input id="targetWeight" value="118" onchange="rebuildPlan()" onfocus="this.select()"> 斤</span>
+      <span class="badge badge-total">共减 <strong id="totalLoss">32</strong> 斤</span>
+    </div>
+    <div class="badge-row" style="margin-top:8px">
+      <span class="badge setting-badge" style="background:#f8f4f6;color:#9b8a8f;border:1px solid #eadce0;cursor:pointer" onclick="editSetting('date')">开始 <input id="startDateInput" value="5/13" onchange="rebuildPlan()" onfocus="this.select()" style="width:58px"> 起</span>
+    </div>
+  </div>
+
+  <div class="progress-section">
+    <div class="progress-label"><span>进度</span><span id="progressText">2个月 · 9周</span></div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
+
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>周次</th>
+          <th>日期</th>
+          <th>起始</th>
+          <th>目标</th>
+          <th>需减</th>
+          <th>结果</th>
+          <th>放纵餐</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    总计目标：两个月减重 <span class="highlight">32斤</span>（150斤 → 118斤）｜已享放纵餐 <strong id="totalCheats">0</strong> 次
+  </div>
+
+  <div class="reset-section">
+    <button class="btn-reset" onclick="resetAll()">重置所有数据</button>
+  </div>
+
+</div>
+
+<div class="overlay" id="overlay" onclick="closePopup()"></div>
+<div class="quick-popup" id="popup">
+  <h4 id="popupTitle">记录放纵餐</h4>
+  <input type="text" id="popupInput" placeholder="火锅、烧烤、奶茶…" maxlength="30" autocomplete="off">
+  <div class="btn-row">
+    <button class="btn-clear" onclick="clearCheat()">清空</button>
+    <button class="btn-cancel" onclick="closePopup()">取消</button>
+    <button class="btn-save" onclick="saveCheat()">保存</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'diet_plan_data';
+const SETTINGS_KEY = 'diet_plan_settings';
+
+let weeks = [];
+let data = {};
+let settings = { startWeight: 150, targetWeight: 118, startDate: '5/13' };
+let editingWeek = null;
+
+function loadSettings() {
+  try {
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    if (raw) settings = JSON.parse(raw);
+  } catch(e) {}
+  document.getElementById('startWeight').value = settings.startWeight;
+  document.getElementById('targetWeight').value = settings.targetWeight;
+  if (settings.startDate) document.getElementById('startDateInput').value = settings.startDate;
+}
+
+function saveSettings() {
+  settings.startWeight = parseInt(document.getElementById('startWeight').value) || 150;
+  settings.targetWeight = parseInt(document.getElementById('targetWeight').value) || 118;
+  settings.startDate = document.getElementById('startDateInput').value.trim() || '5/13';
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+}
+
+function parseDate(str) {
+  const parts = str.split('/');
+  if (parts.length !== 2) return new Date(2026, 4, 13);
+  return new Date(2026, parseInt(parts[0]) - 1, parseInt(parts[1]));
+}
+
+function buildWeeks() {
+  const startW = settings.startWeight;
+  const targetW = settings.targetWeight;
+  const totalLoss = startW - targetW;
+  const weekLoss = 4;
+  const totalWeeks = Math.max(1, Math.ceil(totalLoss / weekLoss));
+
+  document.getElementById('totalLoss').textContent = totalLoss;
+
+  const baseDate = parseDate(settings.startDate);
+
+  weeks = [];
+  let weight = startW;
+  for (let i = 0; i < totalWeeks; i++) {
+    const ws = new Date(baseDate);
+    ws.setDate(ws.getDate() + i * 7);
+    const we = new Date(ws);
+    we.setDate(we.getDate() + 6);
+
+    const remaining = weight - targetW;
+    const thisWeekLoss = remaining <= 0 ? weekLoss : remaining < weekLoss ? remaining : weekLoss;
+    const nextWeight = weight - thisWeekLoss;
+
+    const fmt = d => `${d.getMonth()+1}/${d.getDate()}`;
+    weeks.push({
+      n: i + 1,
+      start: fmt(ws),
+      end: fmt(we),
+      sw: weight,
+      tw: Math.max(nextWeight, targetW),
+      loss: thisWeekLoss
+    });
+    weight = nextWeight;
+    if (weight <= targetW) break;
+  }
+}
+
+function rebuildPlan() {
+  saveSettings();
+  buildWeeks();
+  render();
+}
+
+function editSetting(type) {
+  const map = { start: 'startWeight', target: 'targetWeight', date: 'startDateInput' };
+  document.getElementById(map[type]).focus();
+}
+
+function loadData() {
+  try { const raw = localStorage.getItem(STORAGE_KEY); if (raw) data = JSON.parse(raw); } catch(e) { data = {}; }
+}
+
+function saveData() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  updateProgress();
+  updateTotalCheats();
+}
+
+function getWeekData(n) { return data[n] || { result: null, cheat: null }; }
+
+function render() {
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
+  weeks.forEach((w) => {
+    const wd = getWeekData(w.n);
+    let resultHTML, cheatHTML;
+
+    if (!wd.result) {
+      resultHTML = `<span class="result-btn result-empty" data-week="${w.n}" data-action="toggle">点击</span><span class="result-hint">点击切换</span>`;
+    } else if (wd.result === 'success') {
+      resultHTML = `<span class="result-btn result-success" data-week="${w.n}" data-action="toggle">成功</span>`;
+    } else {
+      resultHTML = `<span class="result-btn result-fail" data-week="${w.n}" data-action="toggle">失败</span>`;
+    }
+
+    if (wd.cheat) {
+      cheatHTML = `<span class="cheat-btn cheat-set" data-week="${w.n}" data-action="cheat">${escapeHTML(wd.cheat)}</span>`;
+    } else if (wd.result === 'success') {
+      cheatHTML = `<span class="cheat-btn" data-week="${w.n}" data-action="cheat">+</span><span class="result-hint">点击添加</span>`;
+    } else if (!wd.result) {
+      cheatHTML = `<span class="cheat-btn" data-week="${w.n}" data-action="cheat">+</span><span class="result-hint">点击添加</span>`;
+    } else {
+      cheatHTML = `<span class="cheat-btn cheat-locked">—</span><span class="result-hint">未达标</span>`;
+    }
+
+    tbody.innerHTML += `<tr>
+      <td class="week-num">第${w.n}周</td>
+      <td class="date-range">${w.start}-${w.end}</td>
+      <td class="weight-start">${w.sw}斤</td>
+      <td class="weight-target">${w.tw}斤</td>
+      <td class="weight-loss">-${w.loss}斤</td>
+      <td>${resultHTML}</td>
+      <td>${cheatHTML}</td>
+    </tr>`;
+  });
+  bindEvents();
+  updateProgress();
+  updateTotalCheats();
+}
+
+function escapeHTML(str) { const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
+
+function bindEvents() {
+  document.querySelectorAll('[data-action="toggle"]').forEach(el => {
+    el.addEventListener('click', function(e) {
+      e.preventDefault();
+      toggleResult(parseInt(this.dataset.week));
+    });
+  });
+  document.querySelectorAll('[data-action="cheat"]').forEach(el => {
+    el.addEventListener('click', function(e) {
+      e.preventDefault();
+      const week = parseInt(this.dataset.week);
+      if (getWeekData(week).result === 'fail') return;
+      openCheatPopup(week);
+    });
+  });
+}
+
+function toggleResult(week) {
+  const wd = getWeekData(week);
+  const current = wd.result;
+  let next = !current ? 'success' : current === 'success' ? 'fail' : null;
+  if (!data[week]) data[week] = { result: null, cheat: null };
+  data[week].result = next;
+  if (next !== 'success') data[week].cheat = null;
+  saveData(); render();
+  const labels = { success: '太棒了！当周可享放纵餐', fail: '没关系，下周继续加油', null: '已清除' };
+  showToast(labels[next]);
+}
+
+function openCheatPopup(week) {
+  editingWeek = week;
+  const wd = getWeekData(week);
+  document.getElementById('popupTitle').textContent = `第${week}周 · 放纵餐`;
+  document.getElementById('popupInput').value = wd.cheat || '';
+  document.getElementById('popup').classList.add('show');
+  document.getElementById('overlay').classList.add('show');
+  setTimeout(() => document.getElementById('popupInput').focus(), 200);
+}
+
+function closePopup() {
+  document.getElementById('popup').classList.remove('show');
+  document.getElementById('overlay').classList.remove('show');
+  editingWeek = null;
+}
+
+function saveCheat() {
+  if (!editingWeek) return;
+  const val = document.getElementById('popupInput').value.trim();
+  if (!val) return;
+  if (!data[editingWeek]) data[editingWeek] = { result: 'success', cheat: null };
+  data[editingWeek].cheat = val;
+  if (!data[editingWeek].result) data[editingWeek].result = 'success';
+  saveData(); closePopup(); render();
+  showToast('记录成功：' + val);
+}
+
+function clearCheat() {
+  if (!editingWeek) return;
+  if (data[editingWeek]) data[editingWeek].cheat = null;
+  saveData(); closePopup(); render();
+  showToast('已清空');
+}
+
+function updateProgress() {
+  let done = 0;
+  weeks.forEach(w => { if (getWeekData(w.n).result === 'success') done++; });
+  const pct = weeks.length ? Math.round((done / weeks.length) * 100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = `已完成 ${done}/${weeks.length} 周 · ${pct}%`;
+}
+
+function updateTotalCheats() {
+  let count = 0;
+  weeks.forEach(w => { const wd = getWeekData(w.n); if (wd.result === 'success' && wd.cheat) count++; });
+  document.getElementById('totalCheats').textContent = count;
+}
+
+function resetAll() {
+  if (!confirm('确定要清空所有记录吗？')) return;
+  data = {}; saveData(); render();
+  showToast('已重置');
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => toast.classList.remove('show'), 1800);
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closePopup();
+  if (e.key === 'Enter' && editingWeek !== null) saveCheat();
+});
+
+loadSettings();
+buildWeeks();
+loadData();
+render();
+</script>
+</body>
+</html>
