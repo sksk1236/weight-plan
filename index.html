@@ -392,6 +392,111 @@
     background: transparent;
   }
 
+  /* Expand button */
+  .expand-btn {
+    display: inline-block;
+    width: 22px;
+    height: 22px;
+    line-height: 22px;
+    border-radius: 50%;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    font-size: 0.85em;
+    font-weight: 700;
+    transition: transform 0.2s, background 0.2s;
+    background: #f8f1f3;
+    color: #c0a0b0;
+    border: none;
+    font-family: inherit;
+    padding: 0;
+  }
+
+  .expand-btn:active {
+    background: #f0dde3;
+  }
+
+  .expand-btn.open {
+    transform: rotate(90deg);
+    background: #f0dde3;
+    color: #d4859e;
+  }
+
+  /* Daily sub-row */
+  .daily-row {
+    display: none;
+  }
+
+  .daily-row.show {
+    display: table-row;
+  }
+
+  .daily-row td {
+    padding: 4px 6px;
+    font-size: 0.72em;
+    background: #fefafb;
+    border-bottom: 1px solid #fdf4f6;
+  }
+
+  .daily-row td:first-child {
+    padding-left: 20px;
+    color: #b8a0a8;
+    font-size: 0.7em;
+  }
+
+  .daily-weight-input {
+    width: 52px;
+    text-align: center;
+    border: 1px solid #ead5dc;
+    border-radius: 8px;
+    padding: 4px 6px;
+    font-size: 0.9em;
+    font-family: inherit;
+    color: #5c4b51;
+    background: #fff;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .daily-weight-input:focus {
+    border-color: #e88193;
+    box-shadow: 0 0 0 2px rgba(232,129,147,0.1);
+  }
+
+  .daily-weight-input.filled {
+    border-color: #c8edda;
+    background: #fbfefc;
+    color: #7ecba1;
+    font-weight: 600;
+  }
+
+  .daily-delta {
+    display: inline-block;
+    font-size: 0.8em;
+    margin-left: 4px;
+    min-width: 36px;
+  }
+
+  .daily-delta.down {
+    color: #7ecba1;
+  }
+
+  .daily-delta.up {
+    color: #d4859e;
+  }
+
+  .week-summary-row {
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .week-summary-row td:first-child {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: center;
+  }
+
   @keyframes sparkle {
     0%, 100% { box-shadow: 0 0 6px rgba(232,184,122,0.06); }
     50% { box-shadow: 0 0 18px rgba(232,184,122,0.22); }
@@ -652,6 +757,29 @@
     .setting-badge input {
       width: 36px;
     }
+
+    .expand-btn {
+      width: 18px;
+      height: 18px;
+      line-height: 18px;
+      font-size: 0.7em;
+    }
+
+    .daily-row td {
+      padding: 3px 4px;
+      font-size: 0.65em;
+    }
+
+    .daily-row td:first-child {
+      padding-left: 12px;
+      font-size: 0.62em;
+    }
+
+    .daily-weight-input {
+      width: 44px;
+      padding: 3px 4px;
+      font-size: 0.8em;
+    }
   }
 
   /* Even smaller phones */
@@ -696,6 +824,24 @@
     .header {
       padding: 14px 8px 8px;
     }
+
+    .expand-btn {
+      width: 16px;
+      height: 16px;
+      line-height: 16px;
+      font-size: 0.65em;
+    }
+
+    .daily-row td:first-child {
+      padding-left: 8px;
+      font-size: 0.58em;
+    }
+
+    .daily-weight-input {
+      width: 38px;
+      padding: 2px 3px;
+      font-size: 0.75em;
+    }
   }
 </style>
 </head>
@@ -725,6 +871,7 @@
     <table>
       <thead>
         <tr>
+          <th></th>
           <th>周次</th>
           <th>日期</th>
           <th>起始</th>
@@ -851,13 +998,34 @@ function saveData() {
   updateTotalCheats();
 }
 
-function getWeekData(n) { return data[n] || { result: null, cheat: null }; }
+function getWeekData(n) { return data[n] || { result: null, cheat: null, daily: {} }; }
+function getDaily(n) { return (data[n] && data[n].daily) || {}; }
+const DAYS = ['周一','周二','周三','周四','周五','周六','周日'];
+
+function getDayDates(weekIdx) {
+  const baseDate = parseDate(settings.startDate);
+  const weekStart = new Date(baseDate);
+  weekStart.setDate(weekStart.getDate() + weekIdx * 7);
+  const fmt = d => `${d.getMonth()+1}/${d.getDate()}`;
+  const dates = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(weekStart);
+    d.setDate(d.getDate() + i);
+    dates.push(fmt(d));
+  }
+  return dates;
+}
 
 function render() {
   const tbody = document.getElementById('tbody');
   tbody.innerHTML = '';
-  weeks.forEach((w) => {
+  const expandedSet = JSON.parse(localStorage.getItem('diet_expanded') || '[]');
+
+  weeks.forEach((w, idx) => {
     const wd = getWeekData(w.n);
+    const daily = getDaily(w.n);
+    const dates = getDayDates(idx);
+    const expanded = expandedSet.includes(w.n);
     let resultHTML, cheatHTML;
 
     if (!wd.result) {
@@ -878,7 +1046,10 @@ function render() {
       cheatHTML = `<span class="cheat-btn cheat-locked">—</span><span class="result-hint">未达标</span>`;
     }
 
-    tbody.innerHTML += `<tr>
+    // Main week row
+    const cls = expanded ? 'open' : '';
+    tbody.innerHTML += `<tr class="week-summary-row" data-week="${w.n}" data-action="expand">
+      <td><button class="expand-btn ${cls}" data-week="${w.n}" data-action="expand">▶</button></td>
       <td class="week-num">第${w.n}周</td>
       <td class="date-range">${w.start}-${w.end}</td>
       <td class="weight-start">${w.sw}斤</td>
@@ -887,6 +1058,32 @@ function render() {
       <td>${resultHTML}</td>
       <td>${cheatHTML}</td>
     </tr>`;
+
+    // Daily sub-rows
+    let dailyHTML = '';
+    let prevWeight = w.sw;
+    for (let d = 1; d <= 7; d++) {
+      const val = daily['d' + d];
+      const filled = val !== undefined && val !== '' ? 'filled' : '';
+      let deltaHTML = '';
+      if (val !== undefined && val !== '') {
+        const diff = (prevWeight - val).toFixed(1);
+        if (diff > 0) {
+          deltaHTML = `<span class="daily-delta down">↓${diff}</span>`;
+        } else if (diff < 0) {
+          deltaHTML = `<span class="daily-delta up">↑${Math.abs(diff)}</span>`;
+        } else {
+          deltaHTML = `<span class="daily-delta" style="color:#999">→0</span>`;
+        }
+        prevWeight = val;
+      }
+      dailyHTML += `<tr class="daily-row ${expanded ? 'show' : ''}" data-week="${w.n}">
+        <td>${DAYS[d-1]} ${dates[d-1]}</td>
+        <td colspan="3"><input class="daily-weight-input ${filled}" type="number" step="0.1" min="50" max="200" value="${val || ''}" placeholder="体重" data-week="${w.n}" data-day="d${d}" data-action="daily" onchange="saveDailyWeight(${w.n}, 'd${d}', this.value)" onfocus="this.select()"> 斤${deltaHTML}</td>
+        <td></td><td></td><td></td>
+      </tr>`;
+    }
+    tbody.innerHTML += dailyHTML;
   });
   bindEvents();
   updateProgress();
@@ -899,17 +1096,65 @@ function bindEvents() {
   document.querySelectorAll('[data-action="toggle"]').forEach(el => {
     el.addEventListener('click', function(e) {
       e.preventDefault();
+      e.stopPropagation();
       toggleResult(parseInt(this.dataset.week));
     });
   });
   document.querySelectorAll('[data-action="cheat"]').forEach(el => {
     el.addEventListener('click', function(e) {
       e.preventDefault();
+      e.stopPropagation();
       const week = parseInt(this.dataset.week);
       if (getWeekData(week).result === 'fail') return;
       openCheatPopup(week);
     });
   });
+  document.querySelectorAll('[data-action="expand"]').forEach(el => {
+    el.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const week = parseInt(this.dataset.week);
+      toggleExpand(week);
+    });
+  });
+}
+
+function saveDailyWeight(week, day, val) {
+  if (!data[week]) data[week] = { result: null, cheat: null, daily: {} };
+  if (!data[week].daily) data[week].daily = {};
+  const v = val.trim();
+  if (v === '' || v === undefined) {
+    delete data[week].daily[day];
+  } else {
+    data[week].daily[day] = parseFloat(v);
+  }
+  saveData();
+  // Refresh daily rows only
+  render();
+  // Re-expand
+  const expandedSet = JSON.parse(localStorage.getItem('diet_expanded') || '[]');
+  if (expandedSet.includes(week)) {
+    document.querySelectorAll(`.daily-row[data-week="${week}"]`).forEach(r => r.classList.add('show'));
+    const btn = document.querySelector(`.expand-btn[data-week="${week}"]`);
+    if (btn) btn.classList.add('open');
+  }
+}
+
+function toggleExpand(week) {
+  const expandedSet = JSON.parse(localStorage.getItem('diet_expanded') || '[]');
+  const idx = expandedSet.indexOf(week);
+  if (idx >= 0) {
+    expandedSet.splice(idx, 1);
+  } else {
+    expandedSet.push(week);
+  }
+  localStorage.setItem('diet_expanded', JSON.stringify(expandedSet));
+
+  const rows = document.querySelectorAll(`.daily-row[data-week="${week}"]`);
+  const btn = document.querySelector(`.expand-btn[data-week="${week}"]`);
+  const isOpen = idx < 0;
+  rows.forEach(r => r.classList.toggle('show', isOpen));
+  if (btn) btn.classList.toggle('open', isOpen);
 }
 
 function toggleResult(week) {
