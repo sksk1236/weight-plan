@@ -392,6 +392,51 @@
     background: transparent;
   }
 
+  /* Expand button */
+  .expand-btn {
+    display: inline-block;
+    width: 22px;
+    height: 22px;
+    line-height: 22px;
+    border-radius: 50%;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    font-size: 0.82em;
+    font-weight: 700;
+    transition: transform 0.2s, background 0.2s;
+    background: #f8f1f3;
+    color: #c0a0b0;
+    border: none;
+    font-family: inherit;
+    padding: 0;
+  }
+
+  .expand-btn:active {
+    background: #f0dde3;
+  }
+
+  .expand-btn.open {
+    transform: rotate(90deg);
+    background: #f0dde3;
+    color: #d4859e;
+  }
+
+  .daily-row {
+    display: none;
+  }
+
+  .daily-row.show {
+    display: table-row;
+  }
+
+  .daily-row td {
+    padding: 5px 6px;
+    font-size: 0.75em;
+    background: #fefafb;
+    border-bottom: 1px solid #fdf4f6;
+  }
+
   /* Daily weight input */
   .daily-weight-input {
     width: 56px;
@@ -774,8 +819,8 @@
     <table>
       <thead>
         <tr>
+          <th></th>
           <th>日期</th>
-          <th>星期</th>
           <th>体重(斤)</th>
           <th>变化</th>
           <th></th>
@@ -900,97 +945,92 @@ function saveData() {
 
 function getWeekData(n) { return data[n] || { result: null, cheat: null, daily: {} }; }
 function getDaily(n) { return (data[n] && data[n].daily) || {}; }
-const DAY_NAMES = ['周一','周二','周三','周四','周五','周六','周日'];
 
-function getAllDays() {
+function getDayDates(weekIdx) {
   const baseDate = parseDate(settings.startDate);
-  const totalDays = weeks.length * 7;
-  const fmt = d => `${d.getMonth()}月${d.getDate()}日`;
-  const days = [];
-  for (let i = 0; i < totalDays; i++) {
-    const d = new Date(baseDate);
+  const weekStart = new Date(baseDate);
+  weekStart.setDate(weekStart.getDate() + weekIdx * 7);
+  const fmt = d => `${d.getMonth()+1}/${d.getDate()}`;
+  const dates = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(weekStart);
     d.setDate(d.getDate() + i);
-    days.push({
-      dateStr: fmt(d),
-      weekday: DAY_NAMES[i % 7],
-      weekNum: Math.floor(i / 7) + 1,
-      dayInWeek: (i % 7) + 1,
-      dKey: 'd' + ((i % 7) + 1)
-    });
+    dates.push(fmt(d));
   }
-  return days;
+  return dates;
 }
 
 function render() {
   const tbody = document.getElementById('tbody');
   tbody.innerHTML = '';
-  const allDays = getAllDays();
-  let prevVal = null;
+  const expandedSet = JSON.parse(localStorage.getItem('diet_expanded') || '[]');
 
-  allDays.forEach((day, i) => {
-    const wd = getWeekData(day.weekNum);
-    const daily = getDaily(day.weekNum);
-    const val = daily[day.dKey];
+  weeks.forEach((w, idx) => {
+    const wd = getWeekData(w.n);
+    const daily = getDaily(w.n);
+    const dates = getDayDates(idx);
+    const expanded = expandedSet.includes(w.n);
 
-    // Week separator every 7th day (before the day row if it's day 1 of week)
-    if (day.dayInWeek === 1) {
-      const w = weeks[day.weekNum - 1];
-      tbody.innerHTML += `<tr style="background:#fef5f7;">
-        <td colspan="5" style="padding:8px 12px;font-size:0.78em;font-weight:700;color:#d4859e;letter-spacing:0.03em;text-align:left;">
-          目标 ${w.tw}斤 · 本周需减${w.loss}斤
-          <span style="float:right;font-weight:400;color:#c0a8b0;font-size:0.9em;">${w.start} — ${w.end}</span>
-        </td>
-      </tr>`;
-    }
+    // Expand button class
+    const btnCls = expanded ? 'expand-btn open' : 'expand-btn';
 
-    // Delta calculation
-    let deltaHTML = '';
-    if (val !== undefined && val !== '') {
-      const numVal = parseFloat(val);
-      if (prevVal !== null) {
-        const diff = (prevVal - numVal).toFixed(1);
-        if (diff > 0) deltaHTML = `<span class="daily-delta down">↓${diff}</span>`;
-        else if (diff < 0) deltaHTML = `<span class="daily-delta up">↑${Math.abs(diff)}</span>`;
-        else deltaHTML = `<span class="daily-delta" style="color:#aaa">→</span>`;
-      }
-      prevVal = numVal;
-    }
-
-    const filled = val !== undefined && val !== '' ? 'filled' : '';
-
-    tbody.innerHTML += `<tr>
-      <td style="color:#5c4b51;font-size:0.9em;white-space:nowrap;">${day.dateStr}</td>
-      <td style="color:#b8a0a8;font-size:0.82em;">${day.weekday}</td>
-      <td><input class="daily-weight-input ${filled}" type="number" step="0.1" min="50" max="200" value="${val || ''}" placeholder="—" data-week="${day.weekNum}" data-day="${day.dKey}" onchange="saveDailyWeight(${day.weekNum}, '${day.dKey}', this.value)" onfocus="this.select()"></td>
-      <td style="min-width:42px;">${deltaHTML}</td>
+    // Main week row
+    tbody.innerHTML += `<tr class="week-summary-row" style="cursor:pointer;">
+      <td><button class="${btnCls}" data-week="${w.n}" data-action="expand">▶</button></td>
+      <td class="date-range" style="font-weight:600;color:#5c4b51;">${w.start} — ${w.end}</td>
+      <td class="weight-target" style="text-align:center;">${w.tw}斤</td>
+      <td class="weight-loss" style="text-align:center;">-${w.loss}斤</td>
       <td></td>
     </tr>`;
 
-    // Week result row after day 7
-    if (day.dayInWeek === 7) {
-      let resultHTML, cheatHTML;
-      if (!wd.result) {
-        resultHTML = `<span class="result-btn result-empty" data-week="${day.weekNum}" data-action="toggle">未评</span>`;
-      } else if (wd.result === 'success') {
-        resultHTML = `<span class="result-btn result-success" data-week="${day.weekNum}" data-action="toggle">达标</span>`;
-      } else {
-        resultHTML = `<span class="result-btn result-fail" data-week="${day.weekNum}" data-action="toggle">未达标</span>`;
+    // Daily sub-rows
+    let prevWeight = w.sw;
+    for (let d = 1; d <= 7; d++) {
+      const val = daily['d' + d];
+      const filled = val !== undefined && val !== '' ? 'filled' : '';
+      let deltaHTML = '';
+      if (val !== undefined && val !== '') {
+        const numVal = parseFloat(val);
+        const diff = (prevWeight - numVal).toFixed(1);
+        if (diff > 0) deltaHTML = `<span class="daily-delta down">↓${diff}</span>`;
+        else if (diff < 0) deltaHTML = `<span class="daily-delta up">↑${Math.abs(diff)}</span>`;
+        else deltaHTML = `<span class="daily-delta" style="color:#aaa">→</span>`;
+        prevWeight = numVal;
       }
-      if (wd.cheat) {
-        cheatHTML = `<span class="cheat-btn cheat-set" data-week="${day.weekNum}" data-action="cheat">${escapeHTML(wd.cheat)}</span>`;
-      } else if (wd.result === 'success') {
-        cheatHTML = `<span class="cheat-btn" data-week="${day.weekNum}" data-action="cheat">+放纵餐</span>`;
-      } else {
-        cheatHTML = `<span class="cheat-btn cheat-locked">—</span>`;
-      }
-
-      tbody.innerHTML += `<tr style="background:#fefafb;border-bottom:2px solid #f5eaee;">
-        <td colspan="2" style="color:#b8a0a8;font-size:0.75em;text-align:right;padding-right:10px;">本周小结</td>
-        <td>${resultHTML}</td>
-        <td>${cheatHTML}</td>
+      tbody.innerHTML += `<tr class="daily-row ${expanded ? 'show' : ''}" data-week="${w.n}">
+        <td></td>
+        <td style="color:#b8a0a8;font-size:0.8em;">${dates[d-1]}</td>
+        <td><input class="daily-weight-input ${filled}" type="number" step="0.1" min="50" max="200" value="${val || ''}" placeholder="—" data-week="${w.n}" data-day="d${d}" onchange="saveDailyWeight(${w.n}, 'd${d}', this.value)" onfocus="this.select()"></td>
+        <td>${deltaHTML}</td>
         <td></td>
       </tr>`;
     }
+
+    // Result + cheat row at bottom of week
+    let resultHTML, cheatHTML;
+    if (!wd.result) {
+      resultHTML = `<span class="result-btn result-empty" data-week="${w.n}" data-action="toggle">点击</span>`;
+    } else if (wd.result === 'success') {
+      resultHTML = `<span class="result-btn result-success" data-week="${w.n}" data-action="toggle">达标</span>`;
+    } else {
+      resultHTML = `<span class="result-btn result-fail" data-week="${w.n}" data-action="toggle">未达标</span>`;
+    }
+    if (wd.cheat) {
+      cheatHTML = `<span class="cheat-btn cheat-set" data-week="${w.n}" data-action="cheat">${escapeHTML(wd.cheat)}</span>`;
+    } else if (wd.result === 'success') {
+      cheatHTML = `<span class="cheat-btn" data-week="${w.n}" data-action="cheat">+</span>`;
+    } else if (!wd.result) {
+      cheatHTML = `<span class="cheat-btn" data-week="${w.n}" data-action="cheat">+</span>`;
+    } else {
+      cheatHTML = `<span class="cheat-btn cheat-locked">—</span>`;
+    }
+    tbody.innerHTML += `<tr class="daily-row ${expanded ? 'show' : ''}" data-week="${w.n}" style="background:#fefafb;">
+      <td></td>
+      <td style="color:#b8a0a8;font-size:0.78em;text-align:right;padding-right:8px;">本周小结</td>
+      <td>${resultHTML}</td>
+      <td>${cheatHTML}</td>
+      <td></td>
+    </tr>`;
   });
 
   bindEvents();
@@ -1017,6 +1057,13 @@ function bindEvents() {
       openCheatPopup(week);
     });
   });
+  document.querySelectorAll('[data-action="expand"]').forEach(el => {
+    el.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleExpand(parseInt(this.dataset.week));
+    });
+  });
 }
 
 function saveDailyWeight(week, day, val) {
@@ -1030,6 +1077,29 @@ function saveDailyWeight(week, day, val) {
   }
   saveData();
   render();
+  // Re-expand after render
+  const expandedSet = JSON.parse(localStorage.getItem('diet_expanded') || '[]');
+  if (expandedSet.includes(week)) {
+    document.querySelectorAll(`.daily-row[data-week="${week}"]`).forEach(r => r.classList.add('show'));
+    const btn = document.querySelector(`.expand-btn[data-week="${week}"]`);
+    if (btn) btn.classList.add('open');
+  }
+}
+
+function toggleExpand(week) {
+  const expandedSet = JSON.parse(localStorage.getItem('diet_expanded') || '[]');
+  const idx = expandedSet.indexOf(week);
+  if (idx >= 0) {
+    expandedSet.splice(idx, 1);
+  } else {
+    expandedSet.push(week);
+  }
+  localStorage.setItem('diet_expanded', JSON.stringify(expandedSet));
+  const rows = document.querySelectorAll(`.daily-row[data-week="${week}"]`);
+  const btn = document.querySelector(`.expand-btn[data-week="${week}"]`);
+  const isOpen = idx < 0;
+  rows.forEach(r => r.classList.toggle('show', isOpen));
+  if (btn) btn.classList.toggle('open', isOpen);
 }
 
 function toggleResult(week) {
